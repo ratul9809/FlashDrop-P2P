@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="bn" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FlashDrop P2P — Ultra-Fast Protected Transfer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            user-select: none;
+            -webkit-user-select: none;
+            box-sizing: border-box;
+        }
+        input, textarea, .selectable {
+            user-select: text;
+            -webkit-user-select: text;
+        }
+        body {
+            font-family: 'Hind Siliguri', sans-serif;
+            background: radial-gradient(circle at top right, #0f172a, #060913 65%);
+            color: #f8fafc;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .glass {
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6);
+        }
+        .glass-inner {
+            background: rgba(30, 41, 59, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .drop-active {
+            border-color: #10b981 !important;
+            background: rgba(16, 185, 129, 0.08) !important;
+            transform: scale(1.01);
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.5); }
+        ::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, 0.4); border-radius: 10px; }
+    </style>
+</head>
+<body class="antialiased selection:bg-emerald-500 selection:text-white">
+
+    <!-- Navbar -->
+    <header class="border-b border-white/10 bg-slate-950/60 backdrop-blur-md sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto px-4 py-3.5 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                    <svg class="w-6 h-6 text-slate-950" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-lg sm:text-xl font-bold tracking-tight text-white">FlashDrop P2P</h1>
+                        <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">Turbo 256KB Stream</span>
+                    </div>
+                    <p class="text-xs text-slate-400 hidden sm:block">Zero-Drop WebRTC LAN/WAN • Mutual Clear Protection</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2.5">
+                <div id="wakeBadge" class="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-300 text-[11px]">
+                    <span>⚡ Screen Awake Active</span>
+                </div>
+                <div id="statusBadge" class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-medium">
+                    <span id="statusDot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                    <span id="statusText">Connecting...</span>
+                </div>
+                <button id="guideBtn" class="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-slate-300 transition flex items-center gap-1.5">
+                    <span>⚡ স্পিড টিপস</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-6xl mx-auto px-4 py-6 sm:py-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Left Column -->
+        <div class="lg:col-span-5 space-y-6">
+            <!-- Device ID & QR Card -->
+            <div class="glass rounded-2xl p-5 sm:p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h2 class="text-base font-bold text-white">আপনার কানেক্ট কোড (3-Digit)</h2>
+                        <p class="text-xs text-slate-400">QR স্ক্যান করুন অথবা ৩ সংখ্যার কোড দিন</p>
+                    </div>
+                    <button id="regenIdBtn" title="নতুন কোড নিন" class="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    </button>
+                </div>
+
+                <div class="glass-inner rounded-xl p-3.5 flex items-center justify-between gap-2 mb-5">
+                    <span id="myRoomId" class="mono text-3xl font-bold tracking-[0.25em] text-emerald-400 pl-2">---</span>
+                    <div class="flex items-center gap-2">
+                        <button id="copyIdBtn" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 border border-white/10 transition">
+                            Copy Code
+                        </button>
+                        <button id="copyLinkBtn" class="px-3 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-xs font-medium text-emerald-300 border border-emerald-500/30 transition">
+                            Link
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-xl bg-slate-900/60 border border-white/5">
+                    <div class="bg-white p-2.5 rounded-xl shrink-0 shadow-md">
+                        <div id="qrcode"></div>
+                    </div>
+                    <div class="text-center sm:text-left">
+                        <span class="inline-block text-[11px] font-semibold px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 mb-1">⚡ Instant Scan</span>
+                        <h3 class="text-sm font-semibold text-white">ক্যামেরা দিয়ে স্ক্যান করুন</h3>
+                        <p class="text-xs text-slate-400 mt-1 leading-relaxed">
+                            মোবাইলের ক্যামেরা দিয়ে QR স্ক্যান করলে কোনো কোড টাইপ করা ছাড়াই সরাসরি কানেক্ট হয়ে যাবে।
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Connect to Remote Device -->
+            <div class="glass rounded-2xl p-5 sm:p-6">
+                <h2 class="text-base font-bold text-white mb-1">অন্য ডিভাইসে কানেক্ট করুন</h2>
+                <p class="text-xs text-slate-400 mb-4">অপর ডিভাইসের ৩-সংখ্যার কানেক্ট কোড লিখুন (যেমন: 482)</p>
+
+                <form id="connectForm" class="flex gap-2">
+                    <input type="text" id="targetIdInput" inputmode="numeric" pattern="[0-9]*" placeholder="123" maxlength="3"
+                        class="mono w-full bg-slate-900/90 border border-white/10 focus:border-emerald-500 rounded-xl px-4 py-3 text-lg font-bold tracking-[0.2em] text-center text-white placeholder-slate-600 focus:outline-none transition">
+                    <button type="submit" id="connectBtn" class="px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm transition shrink-0 shadow-lg shadow-emerald-500/20">
+                        Connect
+                    </button>
+                </form>
+
+                <div id="connectedPeerBox" class="hidden mt-4 p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+                        <div>
+                            <p class="text-xs text-emerald-300 font-medium">কানেক্টেড ডিভাইস কোড</p>
+                            <p id="peerNameDisplay" class="mono text-base font-bold tracking-widest text-white">---</p>
+                        </div>
+                    </div>
+                    <button id="disconnectBtn" class="px-3 py-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-xs font-medium border border-rose-500/30 transition">
+                        Disconnect
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quick P2P Chat -->
+            <div class="glass rounded-2xl p-5 sm:p-6">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-sm font-bold text-white flex items-center gap-2">
+                        <span>💬 কুইক টেক্সট ও লিংক শেয়ার</span>
+                    </h2>
+                    <span class="text-[11px] text-slate-500">E2E Encrypted</span>
+                </div>
+
+                <div id="chatBox" class="h-36 overflow-y-auto glass-inner rounded-xl p-3 space-y-2 mb-3 text-xs">
+                    <p class="text-slate-500 text-center py-10">ডিভাইস কানেক্ট হলে এখানে মেসেজ বা লিংক পাঠাতে পারবেন...</p>
+                </div>
+
+                <form id="chatForm" class="flex gap-2">
+                    <input type="text" id="chatInput" disabled placeholder="যেকোনো লিংক বা টেক্সট লিখুন..."
+                        class="w-full bg-slate-900/90 border border-white/10 focus:border-emerald-500 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none disabled:opacity-50">
+                    <button type="submit" id="chatSendBtn" disabled class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-emerald-500 hover:text-slate-950 text-white text-xs font-semibold transition disabled:opacity-50">
+                        Send
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="lg:col-span-7 space-y-6">
+            <!-- Direct-to-Disk & Speed Optimizer Banner -->
+            <div class="glass rounded-2xl p-4 sm:px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="flex items-start sm:items-center gap-3">
+                    <div class="w-9 h-9 rounded-lg bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-400 shrink-0 mt-0.5 sm:mt-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-white">Direct-to-Disk + Auto Wake-Lock Mode</h3>
+                        <p class="text-xs text-slate-400">বড় ফাইল সরাসরি হার্ডডিস্কে সেভ হবে এবং ট্রান্সফারের সময় স্ক্রিন অফ হবে না</p>
+                    </div>
+                </div>
+                <label class="inline-flex items-center cursor-pointer shrink-0">
+                    <input type="checkbox" id="directDiskToggle" class="sr-only peer" checked>
+                    <div class="relative w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                    <span class="ms-2 text-xs font-medium text-slate-300">Auto-Disk</span>
+                </label>
+            </div>
+
+            <!-- File Drop Zone -->
+            <div id="dropZone" class="glass rounded-2xl p-8 sm:p-12 border-2 border-dashed border-white/15 text-center transition-all relative overflow-hidden">
+                <div id="lockOverlay" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center p-6">
+                    <div class="w-12 h-12 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center mb-3 text-slate-400">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                    </div>
+                    <h3 class="text-base font-bold text-white">ফাইল পাঠাতে প্রথমে ডিভাইস কানেক্ট করুন</h3>
+                    <p class="text-xs text-slate-400 mt-1 max-w-sm">বাম পাশের QR কোড স্ক্যান করুন অথবা অপর ডিভাইসের ৩-সংখ্যার কোড দিয়ে Connect বাটনে চাপ দিন</p>
+                </div>
+
+                <div class="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-4 text-emerald-400">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                </div>
+                <h3 class="text-lg font-bold text-white">ফাইল বা ফোল্ডার এখানে ড্রপ করুন</h3>
+                <p class="text-xs text-slate-400 mt-1 mb-6">ভুল ফাইল সিলেক্ট হলে সাথে সাথে Cancel করতে পারবেন</p>
+
+                <div class="flex flex-wrap items-center justify-center gap-3">
+                    <button id="selectFilesBtn" class="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm transition shadow-lg shadow-emerald-500/20 flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        <span>Select Files</span>
+                    </button>
+                    <button id="selectFolderBtn" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-sm border border-white/10 transition flex items-center gap-2">
+                        <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+                        <span>Select Folder</span>
+                    </button>
+                </div>
+
+                <input type="file" id="fileInput" multiple class="hidden">
+                <input type="file" id="folderInput" webkitdirectory directory multiple class="hidden">
+            </div>
+
+            <!-- Active & Completed Transfers -->
+            <div class="glass rounded-2xl p-5 sm:p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h2 class="text-base font-bold text-white">ফাইল ট্রান্সফার তালিকা (Protected History)</h2>
+                        <p class="text-xs text-slate-400">লিস্ট ক্লিয়ার করতে দুই ডিভাইসেরই অনুমতি (Permission) লাগবে</p>
+                    </div>
+                    <button id="requestClearBtn" class="px-3 py-1.5 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-xs font-medium text-rose-300 transition flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                        <span>Clear List</span>
+                    </button>
+                </div>
+
+                <div id="transferList" class="space-y-3 max-h-[380px] overflow-y-auto pr-1">
+                    <div id="emptyTransferState" class="text-center py-10 text-slate-500 text-xs">
+                        এখনো কোনো ফাইল আদান-প্রদান করা হয়নি
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Two-Sided Clear Permission Modal -->
+    <div id="clearPermModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 hidden items-center justify-center p-4">
+        <div class="glass rounded-2xl max-w-md w-full p-6 border border-amber-500/30 text-center">
+            <div class="w-12 h-12 rounded-full bg-amber-500/15 border border-amber-500/30 flex items-center justify-center mx-auto mb-3 text-amber-400">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            </div>
+            <h3 class="text-lg font-bold text-white">লিস্ট ক্লিয়ার করার অনুমতি চাওয়া হয়েছে</h3>
+            <p class="text-xs text-slate-300 mt-2 leading-relaxed">
+                অপর ডিভাইসটি ফাইল ট্রান্সফার তালিকা (History) মুছে ফেলতে চাচ্ছে। আপনি অনুমতি দিলে উভয় ডিভাইস থেকে তালিকা মুছে যাবে।
+            </p>
+            <div class="flex gap-3 mt-6">
+                <button id="denyClearBtn" class="w-1/2 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs border border-white/10 transition">
+                    Deny (না)
+                </button>
+                <button id="approveClearBtn" class="w-1/2 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition">
+                    Allow Clear (হ্যাঁ)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Speed & Permission Guide Modal -->
+    <div id="guideModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="glass rounded-2xl max-w-lg w-full p-6 border border-white/15">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-white">⚡ ১০০% ফুল স্পিড পাওয়ার জন্য করণীয়</h3>
+                <button id="closeGuideBtn" class="text-slate-400 hover:text-white text-xl">&times;</button>
+            </div>
+            <ul class="space-y-3 text-xs text-slate-300 leading-relaxed">
+                <li class="p-3 rounded-xl bg-white/5 border border-white/5">
+                    <strong class="text-emerald-400 block mb-0.5">১. Bluetooth অবশ্যই OFF রাখুন (Location লাগবে না):</strong>
+                    মোবাইলে Bluetooth অন থাকলে Wi-Fi এর স্পিড অর্ধেক কমে যায়। ফাইল পাঠানোর আগে Bluetooth বন্ধ রাখুন।
+                </li>
+                <li class="p-3 rounded-xl bg-white/5 border border-white/5">
+                    <strong class="text-emerald-400 block mb-0.5">২. 5GHz Wi-Fi বা মোবাইল হটস্পট ব্যবহার করুন:</strong>
+                    রাউটারে কানেক্ট থাকলে 5GHz Wi-Fi সিলেক্ট করুন। অথবা এক ডিভাইসের Hotspot (5GHz ব্যান্ড) অন করে অন্য ডিভাইস কানেক্ট করলে ইন্টারনেট ছাড়াই ৪০–৮০ MB/s স্পিড পাবেন।
+                </li>
+                <li class="p-3 rounded-xl bg-white/5 border border-white/5">
+                    <strong class="text-emerald-400 block mb-0.5">৩. স্ক্রিন মিনিমাইজ করবেন না:</strong>
+                    অ্যাপটিতে অটো Screen Wake-Lock যুক্ত আছে, তাই ব্রাউজার খোলা রাখলে স্ক্রিন অফ হয়ে স্পিড ড্রপ করবে না বা সুতা ছিঁড়ে যাবে না।
+                </li>
+                <li class="p-3 rounded-xl bg-white/5 border border-white/5">
+                    <strong class="text-emerald-400 block mb-0.5">৪. PC থেকে PC তে ১০০+ MB/s স্পিড:</strong>
+                    দুটি পিসির মাঝে একটি CAT6 LAN ক্যাবল লাগিয়ে কানেক্ট করলে সর্বোচ্চ গিগাবিট স্পিড পাবেন।
+                </li>
+            </ul>
+            <button id="gotItBtn" class="mt-5 w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm transition">
+                বুঝেছি
+            </button>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            "use strict";
+
+            // Anti-Inspect & Source Protection Layer
+            document.addEventListener("contextmenu", (e) => e.preventDefault());
+            document.addEventListener("keydown", (e) => {
+                if (
+                    e.key === "F12" ||
+                    (e.ctrlKey && e.shiftKey && ["I", "J", "C"].includes(e.key.toUpperCase())) ||
+                    (e.ctrlKey && ["U", "S"].includes(e.key.toUpperCase()))
+                ) {
+                    e.preventDefault();
+                }
+            });
+
+            // High-Throughput WebRTC Tuning
+            const PEER_PREFIX = "fd-p2p-live-";
+            const CHUNK_SIZE = 256 * 1024; // 256KB High-Speed Chunk
+            const MAX_BUFFERED_AMOUNT = 4 * 1024 * 1024; // 4MB High-Throughput Buffer
+
+            let peer = null;
+            let activeConn = null;
+            let myShortId = "";
+            let isSending = false;
+            let cancelCurrentSend = false;
+            let wakeLock = null;
+            const fileQueue = [];
+
+            // Incoming file state
+            let incomingMeta = null;
+            let incomingBytes = 0;
+            let incomingStartTime = 0;
+            let incomingChunks = [];
+            let fileWritableStream = null;
+            let fileHandleRef = null;
+            let currentTransferCardId = null;
+
+            // DOM Elements
+            const statusBadge = document.getElementById("statusBadge");
+            const statusDot = document.getElementById("statusDot");
+            const statusText = document.getElementById("statusText");
+            const wakeBadge = document.getElementById("wakeBadge");
+            const myRoomIdEl = document.getElementById("myRoomId");
+            const qrContainer = document.getElementById("qrcode");
+            const targetIdInput = document.getElementById("targetIdInput");
+            const connectForm = document.getElementById("connectForm");
+            const connectedPeerBox = document.getElementById("connectedPeerBox");
+            const peerNameDisplay = document.getElementById("peerNameDisplay");
+            const lockOverlay = document.getElementById("lockOverlay");
+            const dropZone = document.getElementById("dropZone");
+            const fileInput = document.getElementById("fileInput");
+            const folderInput = document.getElementById("folderInput");
+            const transferList = document.getElementById("transferList");
+            const chatBox = document.getElementById("chatBox");
+            const chatForm = document.getElementById("chatForm");
+            const chatInput = document.getElementById("chatInput");
+            const chatSendBtn = document.getElementById("chatSendBtn");
+            const directDiskToggle = document.getElementById("directDiskToggle");
+            const clearPermModal = document.getElementById("clearPermModal");
+
+            // Screen Wake Lock to prevent connection drop during huge transfers
+            async function requestWakeLock() {
+                try {
+                    if ("wakeLock" in navigator && !wakeLock) {
+                        wakeLock = await navigator.wakeLock.request("screen");
+                        wakeBadge.classList.remove("hidden");
+                        wakeLock.addEventListener("release", () => {
+                            wakeLock = null;
+                            wakeBadge.classList.add("hidden");
+                        });
+                    }
+                } catch (e) {}
+            }
+
+            function releaseWakeLock() {
+                if (wakeLock) {
+                    wakeLock.release();
+                    wakeLock = null;
+                }
+            }
+
+            function generateShortId() {
+                return String(Math.floor(100 + Math.random() * 900));
+            }
+
+            function formatBytes(bytes) {
+                if (bytes === 0) return "0 B";
+                const k = 1024;
+                const sizes = ["B", "KB", "MB", "GB", "TB"];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+            }
+
+            function formatETA(seconds) {
+                if (!isFinite(seconds) || seconds <= 0) return "Calculating...";
+                if (seconds < 60) return `${Math.ceil(seconds)}s left`;
+                const mins = Math.floor(seconds / 60);
+                const secs = Math.ceil(seconds % 60);
+                return `${mins}m ${secs}s left`;
+            }
+
+            function setStatus(state, text) {
+                statusText.textContent = text;
+                statusBadge.className = "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border ";
+                statusDot.className = "w-2 h-2 rounded-full ";
+
+                if (state === "ready") {
+                    statusBadge.className += "bg-blue-500/10 border-blue-500/30 text-blue-400";
+                    statusDot.className += "bg-blue-400";
+                } else if (state === "connected") {
+                    statusBadge.className += "bg-emerald-500/10 border-emerald-500/30 text-emerald-400";
+                    statusDot.className += "bg-emerald-400 animate-ping";
+                } else if (state === "error") {
+                    statusBadge.className += "bg-rose-500/10 border-rose-500/30 text-rose-400";
+                    statusDot.className += "bg-rose-400";
+                } else {
+                    statusBadge.className += "bg-amber-500/10 border-amber-500/30 text-amber-400";
+                    statusDot.className += "bg-amber-400 animate-pulse";
+                }
+            }
+
+            function renderQRCode(shortId) {
+                qrContainer.innerHTML = "";
+                const url = new URL(window.location.href);
+                url.searchParams.set("connect", shortId);
+                new QRCode(qrContainer, {
+                    text: url.toString(),
+                    width: 112,
+                    height: 112,
+                    colorDark: "#0f172a",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.M
+                });
+            }
+
+            function initPeer(customShortId) {
+                if (peer) peer.destroy();
+                myShortId = customShortId || generateShortId();
+                myRoomIdEl.textContent = myShortId;
+                renderQRCode(myShortId);
+                setStatus("connecting", "Connecting...");
+
+                try {
+                    peer = new Peer(PEER_PREFIX + myShortId, {
+                        debug: 0,
+                        config: {
+                            iceServers: [
+                                { urls: "stun:stun.l.google.com:19302" },
+                                { urls: "stun:stun1.l.google.com:19302" }
+                            ]
+                        }
+                    });
+
+                    peer.on("open", () => {
+                        setStatus("ready", "Ready to Pair");
+                        const params = new URLSearchParams(window.location.search);
+                        const autoTarget = params.get("connect");
+                        if (autoTarget && autoTarget !== myShortId) {
+                            const cleanTarget = autoTarget.replace(/\D/g, "").slice(0, 3);
+                            if (cleanTarget.length === 3) {
+                                targetIdInput.value = cleanTarget;
+                                connectToPeer(cleanTarget);
+                            }
+                        }
+                    });
+
+                    peer.on("connection", (conn) => {
+                        if (activeConn && activeConn.open) {
+                            conn.close();
+                            return;
+                        }
+                        setupConnection(conn);
+                    });
+
+                    peer.on("error", (err) => {
+                        if (err.type === "unavailable-id") {
+                            initPeer(generateShortId());
+                        } else if (err.type === "peer-unavailable") {
+                            setStatus("ready", "Code Not Found");
+                            alert("এই ৩-সংখ্যার কোডটি পাওয়া যায়নি। অপর ডিভাইসটি অনলাইনে আছে কি না চেক করুন।");
+                        } else {
+                            setStatus("error", "Network Offline");
+                        }
+                    });
+                } catch (e) {
+                    setStatus("error", "WebRTC Unavailable");
+                }
+            }
+
+            function connectToPeer(targetShortId) {
+                const cleanId = targetShortId.trim().replace(/\D/g, "");
+                if (cleanId.length !== 3) {
+                    return alert("অনুগ্রহ করে সঠিক ৩-সংখ্যার কোড লিখুন (যেমন: 482)");
+                }
+                if (cleanId === myShortId) {
+                    return alert("নিজের কোডে নিজে কানেক্ট করা যাবে না!");
+                }
+
+                setStatus("connecting", `Pairing ${cleanId}...`);
+                const conn = peer.connect(PEER_PREFIX + cleanId, {
+                    reliable: true
+                });
+                setupConnection(conn);
+            }
+
+            function setupConnection(conn) {
+                activeConn = conn;
+
+                conn.on("open", () => {
+                    const remoteShort = conn.peer.replace(PEER_PREFIX, "");
+                    setStatus("connected", `Connected: ${remoteShort}`);
+                    peerNameDisplay.textContent = remoteShort;
+                    connectedPeerBox.classList.remove("hidden");
+                    lockOverlay.classList.add("hidden");
+                    chatInput.disabled = false;
+                    chatSendBtn.disabled = false;
+                    requestWakeLock();
+                    appendSystemChat(`ডিভাইস ${remoteShort}-এর সাথে নিরাপদ P2P সংযোগ স্থাপিত হয়েছে।`);
+                });
+
+                conn.on("data", async (data) => {
+                    if (data instanceof ArrayBuffer || ArrayBuffer.isView(data)) {
+                        await handleIncomingChunk(data);
+                    } else if (typeof data === "object" && data !== null) {
+                        if (data.type === "file-meta") {
+                            await prepareIncomingFile(data);
+                        } else if (data.type === "file-end") {
+                            await finalizeIncomingFile();
+                        } else if (data.type === "file-cancel") {
+                            await abortIncomingFile("অপর পাশ থেকে ফাইলটি বাতিল (Cancel) করা হয়েছে।");
+                        } else if (data.type === "clear-request") {
+                            clearPermModal.classList.remove("hidden");
+                            clearPermModal.classList.add("flex");
+                        } else if (data.type === "clear-approved") {
+                            executeClearList();
+                            appendSystemChat("✅ অপর ডিভাইসের অনুমতিতে ট্রান্সফার তালিকা ক্লিয়ার করা হয়েছে।");
+                        } else if (data.type === "clear-denied") {
+                            const btn = document.getElementById("requestClearBtn");
+                            btn.disabled = false;
+                            btn.innerHTML = `<span>Clear List</span>`;
+                            alert("❌ অপর ডিভাইসটি তালিকা ক্লিয়ার করার অনুমতি দেয়নি!");
+                        } else if (data.type === "chat") {
+                            appendChatMessage(data.text, false);
+                        }
+                    }
+                });
+
+                conn.on("close", () => resetConnectionUI());
+                conn.on("error", () => resetConnectionUI());
+            }
+
+            function resetConnectionUI() {
+                activeConn = null;
+                releaseWakeLock();
+                setStatus("ready", "Ready to Pair");
+                connectedPeerBox.classList.add("hidden");
+                lockOverlay.classList.remove("hidden");
+                chatInput.disabled = true;
+                chatSendBtn.disabled = true;
+                appendSystemChat("সংযোগ বিচ্ছিন্ন হয়েছে।");
+            }
+
+            // Create Transfer Progress Card with Instant Cancel Button
+            function createTransferCard(fileName, fileSize, direction, onCancelCallback) {
+                const emptyState = document.getElementById("emptyTransferState");
+                if (emptyState) emptyState.remove();
+
+                const cardId = "tx-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
+                const badgeColor = direction === "send" ? "text-emerald-400 bg-emerald-500/10" : "text-blue-400 bg-blue-500/10";
+                const badgeLabel = direction === "send" ? "SENDING" : "RECEIVING";
+
+                const card = document.createElement("div");
+                card.id = cardId;
+                card.className = "glass-inner rounded-xl p-3.5 transition";
+                card.innerHTML = `
+                    <div class="flex items-center justify-between gap-2 mb-1.5">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded ${badgeColor}">${badgeLabel}</span>
+                            <p class="text-xs font-semibold text-white truncate" title="${fileName}">${fileName}</p>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <span class="mono text-[11px] text-slate-400">${formatBytes(fileSize)}</span>
+                            <button id="${cardId}-cancel" class="px-2 py-0.5 rounded bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white text-[10px] font-bold border border-rose-500/30 transition">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                    <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden mb-1.5">
+                        <div id="${cardId}-bar" class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-150" style="width: 0%"></div>
+                    </div>
+                    <div class="flex items-center justify-between text-[11px] text-slate-400">
+                        <span id="${cardId}-speed" class="mono">0.00 MB/s</span>
+                        <span id="${cardId}-status">0% • Starting...</span>
+                    </div>
+                `;
+                transferList.prepend(card);
+
+                const cancelBtn = document.getElementById(`${cardId}-cancel`);
+                if (cancelBtn && onCancelCallback) {
+                    cancelBtn.onclick = () => onCancelCallback(cardId);
+                }
+
+                return cardId;
+            }
+
+            function updateTransferCard(cardId, loaded, total, startTime) {
+                const percent = total > 0 ? Math.min(100, (loaded / total) * 100) : 100;
+                const elapsed = (Date.now() - startTime) / 1000;
+                const speedBps = elapsed > 0 ? loaded / elapsed : 0;
+                const speedMBps = (speedBps / (1024 * 1024)).toFixed(2);
+                const remainingBytes = total - loaded;
+                const eta = speedBps > 0 ? remainingBytes / speedBps : 0;
+
+                const barEl = document.getElementById(`${cardId}-bar`);
+                const speedEl = document.getElementById(`${cardId}-speed`);
+                const statusEl = document.getElementById(`${cardId}-status`);
+
+                if (barEl) barEl.style.width = `${percent.toFixed(1)}%`;
+                if (speedEl) speedEl.textContent = `${speedMBps} MB/s`;
+                if (statusEl) statusEl.textContent = `${percent.toFixed(1)}% • ${formatETA(eta)}`;
+            }
+
+            function markCardCanceled(cardId, reasonText) {
+                const barEl = document.getElementById(`${cardId}-bar`);
+                const statusEl = document.getElementById(`${cardId}-status`);
+                const cancelBtn = document.getElementById(`${cardId}-cancel`);
+                if (cancelBtn) cancelBtn.remove();
+                if (barEl) {
+                    barEl.className = "h-full bg-rose-500";
+                }
+                if (statusEl) {
+                    statusEl.innerHTML = `<span class="text-rose-400 font-bold">⛔ ${reasonText}</span>`;
+                }
+            }
+
+            function completeTransferCard(cardId, downloadUrl, fileName) {
+                const barEl = document.getElementById(`${cardId}-bar`);
+                const statusEl = document.getElementById(`${cardId}-status`);
+                const cancelBtn = document.getElementById(`${cardId}-cancel`);
+                if (cancelBtn) cancelBtn.remove();
+                if (barEl) barEl.style.width = "100%";
+                if (statusEl) {
+                    if (downloadUrl) {
+                        statusEl.innerHTML = `<a href="${downloadUrl}" download="${fileName}" class="text-emerald-400 font-bold underline">✅ Saved (Click to Save Again)</a>`;
+                    } else {
+                        statusEl.innerHTML = `<span class="text-emerald-400 font-bold">✅ Completed</span>`;
+                    }
+                }
+            }
+
+            // Sending Queue & High-Speed Flow Control
+            function enqueueFiles(files) {
+                if (!activeConn || !activeConn.open) {
+                    return alert("প্রথমে অন্য ডিভাইসের সাথে কানেক্ট করুন!");
+                }
+                requestWakeLock();
+                for (const file of files) {
+                    fileQueue.push(file);
+                }
+                processQueue();
+            }
+
+            async function processQueue() {
+                if (isSending || fileQueue.length === 0) return;
+                isSending = true;
+
+                while (fileQueue.length > 0) {
+                    const file = fileQueue.shift();
+                    await sendSingleFile(file);
+                }
+                isSending = false;
+            }
+
+            function sendSingleFile(file) {
+                return new Promise((resolve) => {
+                    cancelCurrentSend = false;
+                    const displayName = file.webkitRelativePath || file.name;
+
+                    const cardId = createTransferCard(displayName, file.size, "send", (cId) => {
+                        cancelCurrentSend = true;
+                        if (activeConn && activeConn.open) {
+                            activeConn.send({ type: "file-cancel" });
+                        }
+                        markCardCanceled(cId, "Canceled by You");
+                    });
+
+                    const startTime = Date.now();
+
+                    activeConn.send({
+                        type: "file-meta",
+                        name: file.name,
+                        size: file.size,
+                        mime: file.type || "application/octet-stream"
+                    });
+
+                    let offset = 0;
+                    const dc = activeConn.dataChannel;
+
+                    function pumpChunks() {
+                        if (cancelCurrentSend || !activeConn || !activeConn.open) {
+                            return resolve();
+                        }
+
+                        while (offset < file.size) {
+                            if (cancelCurrentSend) return resolve();
+
+                            if (dc && dc.bufferedAmount > MAX_BUFFERED_AMOUNT) {
+                                setTimeout(pumpChunks, 5);
+                                return;
+                            }
+
+                            const slice = file.slice(offset, offset + CHUNK_SIZE);
+                            const reader = new FileReader();
+                            reader.onload = (e) => {
+                                if (cancelCurrentSend || !activeConn || !activeConn.open) {
+                                    return resolve();
+                                }
+                                activeConn.send(e.target.result);
+                                offset += e.target.result.byteLength;
+                                updateTransferCard(cardId, offset, file.size, startTime);
+
+                                if (offset < file.size) {
+                                    pumpChunks();
+                                } else {
+                                    activeConn.send({ type: "file-end" });
+                                    completeTransferCard(cardId, null, file.name);
+                                    resolve();
+                                }
+                            };
+                            reader.readAsArrayBuffer(slice);
+                            break;
+                        }
+                    }
+
+                    if (file.size === 0) {
+                        activeConn.send({ type: "file-end" });
+                        completeTransferCard(cardId, null, file.name);
+                        resolve();
+                    } else {
+                        pumpChunks();
+                    }
+                });
+            }
+
+            // Receiving Logic with Instant Cancel Support
+            async function prepareIncomingFile(meta) {
+                incomingMeta = meta;
+                incomingBytes = 0;
+                incomingStartTime = Date.now();
+                incomingChunks = [];
+                fileWritableStream = null;
+                fileHandleRef = null;
+                requestWakeLock();
+
+                currentTransferCardId = createTransferCard(meta.name, meta.size, "receive", async (cId) => {
+                    if (activeConn && activeConn.open) {
+                        activeConn.send({ type: "file-cancel" });
+                    }
+                    await abortIncomingFile("Canceled by You");
+                });
+
+                if (directDiskToggle.checked && "showSaveFilePicker" in window) {
+                    try {
+                        fileHandleRef = await window.showSaveFilePicker({
+                            suggestedName: meta.name
+                        });
+                        fileWritableStream = await fileHandleRef.createWritable();
+                    } catch (err) {
+                        fileWritableStream = null;
+                        fileHandleRef = null;
+                    }
+                }
+            }
+
+            async function handleIncomingChunk(chunk) {
+                if (!incomingMeta) return;
+                const buffer = chunk instanceof ArrayBuffer ? chunk : chunk.buffer;
+                incomingBytes += buffer.byteLength;
+
+                if (fileWritableStream) {
+                    await fileWritableStream.write(buffer);
+                } else {
+                    incomingChunks.push(buffer);
+                }
+
+                updateTransferCard(currentTransferCardId, incomingBytes, incomingMeta.size, incomingStartTime);
+            }
+
+            async function abortIncomingFile(reasonText) {
+                if (!incomingMeta) return;
+                if (fileWritableStream) {
+                    try {
+                        await fileWritableStream.abort();
+                    } catch (e) {}
+                }
+                if (currentTransferCardId) {
+                    markCardCanceled(currentTransferCardId, reasonText);
+                }
+                incomingMeta = null;
+                incomingChunks = [];
+                fileWritableStream = null;
+                fileHandleRef = null;
+            }
+
+            async function finalizeIncomingFile() {
+                if (!incomingMeta) return;
+
+                if (fileWritableStream) {
+                    await fileWritableStream.close();
+                    completeTransferCard(currentTransferCardId, null, incomingMeta.name);
+                } else {
+                    const blob = new Blob(incomingChunks, { type: incomingMeta.mime });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = incomingMeta.name;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    completeTransferCard(currentTransferCardId, url, incomingMeta.name);
+                }
+
+                incomingMeta = null;
+                incomingChunks = [];
+                fileWritableStream = null;
+                fileHandleRef = null;
+            }
+
+            function executeClearList() {
+                transferList.innerHTML = `<div id="emptyTransferState" class="text-center py-10 text-slate-500 text-xs">এখনো কোনো ফাইল আদান-প্রদান করা হয়নি</div>`;
+                const btn = document.getElementById("requestClearBtn");
+                btn.disabled = false;
+                btn.innerHTML = `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg><span>Clear List</span>`;
+            }
+
+            // Chat Helpers
+            function appendSystemChat(msg) {
+                if (chatBox.querySelector("p.text-center")) chatBox.innerHTML = "";
+                const div = document.createElement("div");
+                div.className = "text-[11px] text-slate-400 italic text-center py-1";
+                div.textContent = msg;
+                chatBox.appendChild(div);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+
+            function appendChatMessage(text, isMe) {
+                if (chatBox.querySelector("p.text-center")) chatBox.innerHTML = "";
+                const wrapper = document.createElement("div");
+                wrapper.className = `flex ${isMe ? "justify-end" : "justify-start"}`;
+
+                const bubble = document.createElement("div");
+                bubble.className = `selectable max-w-[85%] px-3 py-2 rounded-xl break-all cursor-pointer ${
+                    isMe ? "bg-emerald-500/20 text-emerald-100 border border-emerald-500/30" : "bg-slate-800 text-slate-200 border border-white/10"
+                }`;
+                bubble.title = "ক্লিক করে কপি করুন";
+                bubble.textContent = text;
+                bubble.onclick = () => {
+                    navigator.clipboard.writeText(text);
+                    bubble.style.opacity = "0.6";
+                    setTimeout(() => (bubble.style.opacity = "1"), 200);
+                };
+
+                wrapper.appendChild(bubble);
+                chatBox.appendChild(wrapper);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+
+            // UI Event Listeners
+            targetIdInput.addEventListener("input", () => {
+                targetIdInput.value = targetIdInput.value.replace(/\D/g, "").slice(0, 3);
+            });
+
+            document.getElementById("regenIdBtn").onclick = () => {
+                if (activeConn && activeConn.open) {
+                    if (!confirm("নতুন কোড নিলে বর্তমান সংযোগ বিচ্ছিন্ন হবে। নিশ্চিত?")) return;
+                }
+                initPeer();
+            };
+
+            document.getElementById("copyIdBtn").onclick = () => {
+                navigator.clipboard.writeText(myShortId);
+                const btn = document.getElementById("copyIdBtn");
+                btn.textContent = "Copied!";
+                setTimeout(() => (btn.textContent = "Copy Code"), 1500);
+            };
+
+            document.getElementById("copyLinkBtn").onclick = () => {
+                const url = new URL(window.location.href);
+                url.searchParams.set("connect", myShortId);
+                navigator.clipboard.writeText(url.toString());
+                const btn = document.getElementById("copyLinkBtn");
+                btn.textContent = "Copied!";
+                setTimeout(() => (btn.textContent = "Link"), 1500);
+            };
+
+            connectForm.onsubmit = (e) => {
+                e.preventDefault();
+                connectToPeer(targetIdInput.value);
+            };
+
+            document.getElementById("disconnectBtn").onclick = () => {
+                if (activeConn) activeConn.close();
+                resetConnectionUI();
+            };
+
+            document.getElementById("selectFilesBtn").onclick = () => fileInput.click();
+            document.getElementById("selectFolderBtn").onclick = () => folderInput.click();
+
+            fileInput.onchange = (e) => {
+                if (e.target.files.length) enqueueFiles(e.target.files);
+                fileInput.value = "";
+            };
+
+            folderInput.onchange = (e) => {
+                if (e.target.files.length) enqueueFiles(e.target.files);
+                folderInput.value = "";
+            };
+
+            // Drag & Drop
+            ["dragenter", "dragover"].forEach((evt) => {
+                dropZone.addEventListener(evt, (e) => {
+                    e.preventDefault();
+                    dropZone.classList.add("drop-active");
+                });
+            });
+
+            ["dragleave", "drop"].forEach((evt) => {
+                dropZone.addEventListener(evt, (e) => {
+                    e.preventDefault();
+                    dropZone.classList.remove("drop-active");
+                });
+            });
+
+            dropZone.addEventListener("drop", (e) => {
+                if (e.dataTransfer.files.length) {
+                    enqueueFiles(e.dataTransfer.files);
+                }
+            });
+
+            chatForm.onsubmit = (e) => {
+                e.preventDefault();
+                const text = chatInput.value.trim();
+                if (!text || !activeConn || !activeConn.open) return;
+                activeConn.send({ type: "chat", text });
+                appendChatMessage(text, true);
+                chatInput.value = "";
+            };
+
+            // Two-Sided Clear Permission Request
+            document.getElementById("requestClearBtn").onclick = () => {
+                if (document.getElementById("emptyTransferState")) return;
+
+                if (!activeConn || !activeConn.open) {
+                    return alert("লিস্ট ক্লিয়ার করার জন্য উভয় ডিভাইস কানেক্টেড থাকতে হবে এবং অপর ডিভাইসের অনুমতি লাগবে!");
+                }
+
+                const btn = document.getElementById("requestClearBtn");
+                btn.disabled = true;
+                btn.textContent = "Waiting Permission...";
+                activeConn.send({ type: "clear-request" });
+            };
+
+            document.getElementById("approveClearBtn").onclick = () => {
+                clearPermModal.classList.add("hidden");
+                clearPermModal.classList.remove("flex");
+                executeClearList();
+                if (activeConn && activeConn.open) {
+                    activeConn.send({ type: "clear-approved" });
+                }
+            };
+
+            document.getElementById("denyClearBtn").onclick = () => {
+                clearPermModal.classList.add("hidden");
+                clearPermModal.classList.remove("flex");
+                if (activeConn && activeConn.open) {
+                    activeConn.send({ type: "clear-denied" });
+                }
+            };
+
+            // Modal Controls
+            const guideModal = document.getElementById("guideModal");
+            document.getElementById("guideBtn").onclick = () => {
+                guideModal.classList.remove("hidden");
+                guideModal.classList.add("flex");
+            };
+            [document.getElementById("closeGuideBtn"), document.getElementById("gotItBtn")].forEach((btn) => {
+                btn.onclick = () => {
+                    guideModal.classList.add("hidden");
+                    guideModal.classList.remove("flex");
+                };
+            });
+
+            // Boot
+            initPeer();
+        })();
+    </script>
+</body>
+</html>
