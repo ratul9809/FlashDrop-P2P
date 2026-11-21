@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#10b981">
     <title>FlashDrop P2P — Ultra-Fast Direct File Share</title>
-    <!-- Custom Share-Type SVG Favicon -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%2310b981'/%3E%3Cstop offset='100%25' stop-color='%230d9488'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Ccircle cx='44' cy='18' r='6.5' fill='%23ffffff'/%3E%3Ccircle cx='18' cy='32' r='6.5' fill='%23ffffff'/%3E%3Ccircle cx='44' cy='46' r='6.5' fill='%23ffffff'/%3E%3Cpath d='M23.5 29l15-8M23.5 35l15 8' stroke='%23ffffff' stroke-width='4.5' stroke-linecap='round'/%3E%3C/svg%3E">
+    <link rel="icon" type="image/png" href="https://img.icons8.com/fluency/96/share.png">
+    <link rel="apple-touch-icon" href="https://img.icons8.com/fluency/192/share.png">
     <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -80,11 +80,8 @@
             overflow-x: hidden;
         }
 
-        .mono {
-            font-family: 'JetBrains Mono', monospace;
-        }
+        .mono { font-family: 'JetBrains Mono', monospace; }
 
-        /* Navbar */
         .navbar {
             position: sticky;
             top: 0;
@@ -185,7 +182,6 @@
             background: currentColor;
         }
 
-        /* Buttons */
         .btn {
             border: 1px solid var(--border-color);
             background: var(--inner-bg);
@@ -208,10 +204,7 @@
             border-color: var(--accent);
         }
 
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
         .btn-primary {
             background: var(--accent);
@@ -220,29 +213,11 @@
             box-shadow: 0 6px 16px rgba(16, 185, 129, 0.25);
         }
 
-        .btn-primary:hover:not(:disabled) {
-            background: var(--accent-hover);
-        }
+        .btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+        .btn-soft { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-border); }
+        .btn-danger { background: var(--danger-soft); color: var(--danger); border-color: rgba(225, 29, 72, 0.25); }
+        .btn-lg { padding: 10px 18px; font-size: 14px; border-radius: 12px; }
 
-        .btn-soft {
-            background: var(--accent-soft);
-            color: var(--accent);
-            border-color: var(--accent-border);
-        }
-
-        .btn-danger {
-            background: var(--danger-soft);
-            color: var(--danger);
-            border-color: rgba(225, 29, 72, 0.25);
-        }
-
-        .btn-lg {
-            padding: 10px 18px;
-            font-size: 14px;
-            border-radius: 12px;
-        }
-
-        /* Layout Grid */
         .container {
             max-width: 1140px;
             margin: 0 auto;
@@ -253,17 +228,10 @@
         }
 
         @media (min-width: 960px) {
-            .container {
-                grid-template-columns: 5fr 7fr;
-                padding-top: 28px;
-            }
+            .container { grid-template-columns: 5fr 7fr; padding-top: 28px; }
         }
 
-        .col-stack {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
+        .col-stack { display: flex; flex-direction: column; gap: 20px; }
 
         .card {
             background: var(--card-bg);
@@ -282,17 +250,9 @@
             margin-bottom: 14px;
         }
 
-        .card-title {
-            font-size: 16px;
-            font-weight: 700;
-        }
+        .card-title { font-size: 16px; font-weight: 700; }
+        .card-desc { font-size: 12px; color: var(--text-muted); }
 
-        .card-desc {
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-
-        /* Room ID Box */
         .code-box {
             background: var(--inner-bg);
             border: 1px solid var(--border-color);
@@ -324,10 +284,7 @@
         }
 
         @media (max-width: 480px) {
-            .qr-panel {
-                flex-direction: column;
-                text-align: center;
-            }
+            .qr-panel { flex-direction: column; text-align: center; }
         }
 
         .qr-wrap {
@@ -339,12 +296,7 @@
             line-height: 0;
         }
 
-        /* Connect Form */
-        .input-group {
-            display: flex;
-            gap: 8px;
-            margin-top: 12px;
-        }
+        .input-group { display: flex; gap: 8px; margin-top: 12px; }
 
         .input-code {
             width: 100%;
@@ -361,9 +313,7 @@
             transition: border-color 0.2s;
         }
 
-        .input-code:focus, .input-text:focus {
-            border-color: var(--accent);
-        }
+        .input-code:focus, .input-text:focus { border-color: var(--accent); }
 
         .input-text {
             width: 100%;
@@ -388,7 +338,6 @@
             justify-content: space-between;
         }
 
-        /* Chat Box */
         .chat-box {
             height: 140px;
             overflow-y: auto;
@@ -411,64 +360,18 @@
             cursor: pointer;
         }
 
-        .chat-me {
-            align-self: flex-end;
-            background: var(--accent-soft);
-            border: 1px solid var(--accent-border);
-            color: var(--text-main);
-        }
+        .chat-me { align-self: flex-end; background: var(--accent-soft); border: 1px solid var(--accent-border); color: var(--text-main); }
+        .chat-them { align-self: flex-start; background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-main); }
 
-        .chat-them {
-            align-self: flex-start;
-            background: var(--input-bg);
-            border: 1px solid var(--border-color);
-            color: var(--text-main);
-        }
+        .disk-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 18px; }
 
-        /* Toggle Switch */
-        .disk-bar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            padding: 14px 18px;
-        }
-
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 44px;
-            height: 24px;
-            flex-shrink: 0;
-        }
-
+        .switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; }
         .switch input { opacity: 0; width: 0; height: 0; }
-
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            inset: 0;
-            background-color: #94a3b8;
-            transition: 0.25s;
-            border-radius: 34px;
-        }
-
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 18px;
-            width: 18px;
-            left: 3px;
-            bottom: 3px;
-            background-color: white;
-            transition: 0.25s;
-            border-radius: 50%;
-        }
-
+        .slider { position: absolute; cursor: pointer; inset: 0; background-color: #94a3b8; transition: 0.25s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: 0.25s; border-radius: 50%; }
         input:checked + .slider { background-color: var(--accent); }
         input:checked + .slider:before { transform: translateX(20px); }
 
-        /* Drop Zone */
         .drop-zone {
             position: relative;
             border: 2px dashed var(--border-color);
@@ -479,10 +382,7 @@
             overflow: hidden;
         }
 
-        .drop-zone.drop-active {
-            border-color: var(--accent);
-            background: var(--accent-soft);
-        }
+        .drop-zone.drop-active { border-color: var(--accent); background: var(--accent-soft); }
 
         .lock-overlay {
             position: absolute;
@@ -509,77 +409,16 @@
             margin: 0 auto 14px;
         }
 
-        .btn-row {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 18px;
-        }
+        .btn-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 18px; }
+        .tx-list { display: flex; flex-direction: column; gap: 10px; max-height: 360px; overflow-y: auto; }
+        .tx-item { background: var(--inner-bg); border: 1px solid var(--border-color); border-radius: 13px; padding: 12px 14px; }
+        .tx-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+        .tx-name-wrap { display: flex; align-items: center; gap: 8px; min-width: 0; }
+        .tx-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .progress-track { width: 100%; height: 7px; background: rgba(148, 163, 184, 0.25); border-radius: 99px; overflow: hidden; margin-bottom: 6px; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #10b981, #0d9488); width: 0%; transition: width 0.15s ease; }
+        .tx-meta { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); }
 
-        /* Transfer List */
-        .tx-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            max-height: 360px;
-            overflow-y: auto;
-        }
-
-        .tx-item {
-            background: var(--inner-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 13px;
-            padding: 12px 14px;
-        }
-
-        .tx-top {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-            margin-bottom: 8px;
-        }
-
-        .tx-name-wrap {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            min-width: 0;
-        }
-
-        .tx-name {
-            font-size: 13px;
-            font-weight: 600;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .progress-track {
-            width: 100%;
-            height: 7px;
-            background: rgba(148, 163, 184, 0.25);
-            border-radius: 99px;
-            overflow: hidden;
-            margin-bottom: 6px;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #10b981, #0d9488);
-            width: 0%;
-            transition: width 0.15s ease;
-        }
-
-        .tx-meta {
-            display: flex;
-            justify-content: space-between;
-            font-size: 11px;
-            color: var(--text-muted);
-        }
-
-        /* Modals */
         .modal-backdrop {
             position: fixed;
             inset: 0;
@@ -592,31 +431,10 @@
             padding: 16px;
         }
 
-        .modal-backdrop.open {
-            display: flex;
-        }
-
-        .modal-box {
-            max-width: 460px;
-            width: 100%;
-        }
-
-        .guide-list {
-            list-style: none;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin: 14px 0 18px;
-            font-size: 12.5px;
-        }
-
-        .guide-list li {
-            background: var(--inner-bg);
-            border: 1px solid var(--border-color);
-            padding: 10px 12px;
-            border-radius: 12px;
-        }
-
+        .modal-backdrop.open { display: flex; }
+        .modal-box { max-width: 460px; width: 100%; }
+        .guide-list { list-style: none; display: flex; flex-direction: column; gap: 10px; margin: 14px 0 18px; font-size: 12.5px; }
+        .guide-list li { background: var(--inner-bg); border: 1px solid var(--border-color); padding: 10px 12px; border-radius: 12px; }
         .hidden { display: none !important; }
 
         @media (max-width: 600px) {
@@ -648,7 +466,7 @@
             </div>
 
             <div class="nav-actions">
-                <button id="installAppBtn" class="btn btn-soft hidden">📲 Install</button>
+                <button id="installAppBtn" class="btn btn-primary hidden">📲 Install App</button>
                 <div id="statusBadge" class="status-pill status-connecting">
                     <span class="dot"></span>
                     <span id="statusText">Connecting...</span>
@@ -667,7 +485,6 @@
 
         <!-- Left Column -->
         <div class="col-stack">
-            <!-- Device ID & QR -->
             <section class="card">
                 <div class="card-header">
                     <div>
@@ -699,7 +516,6 @@
                 </div>
             </section>
 
-            <!-- Connect Remote Device -->
             <section class="card">
                 <h2 class="card-title">অন্য ডিভাইসে কানেক্ট করুন</h2>
                 <p class="card-desc">অপর ডিভাইসের ৩-সংখ্যার কানেক্ট কোড লিখুন (যেমন: 482)</p>
@@ -718,7 +534,6 @@
                 </div>
             </section>
 
-            <!-- Quick Chat -->
             <section class="card">
                 <div class="card-header" style="margin-bottom:10px;">
                     <h2 class="card-title" style="font-size:14px;">💬 কুইক টেক্সট ও লিংক শেয়ার</h2>
@@ -738,7 +553,6 @@
 
         <!-- Right Column -->
         <div class="col-stack">
-            <!-- Direct-to-Disk Toggle -->
             <section class="card disk-bar">
                 <div>
                     <h3 style="font-size:14px; font-weight:700;">💾 Direct-to-Disk + Auto Wake-Lock</h3>
@@ -750,7 +564,6 @@
                 </label>
             </section>
 
-            <!-- Drop Zone -->
             <section id="dropZone" class="card drop-zone">
                 <div id="lockOverlay" class="lock-overlay">
                     <div style="font-size:28px; margin-bottom:8px;">🔒</div>
@@ -777,7 +590,6 @@
                 <input type="file" id="folderInput" webkitdirectory directory multiple class="hidden">
             </section>
 
-            <!-- Transfer History -->
             <section class="card">
                 <div class="card-header">
                     <div>
@@ -829,7 +641,7 @@
                 </li>
                 <li>
                     <strong style="color:var(--accent);">৩. অফলাইনে অ্যাপ ওপেন করতে Install করুন:</strong><br>
-                    ব্রাউজার থেকে "Install" বা "Add to Home Screen" করে রাখলে নেট না থাকলেও অ্যাপটি ওপেন হবে।
+                    উপরের "Install App" বাটন বা ব্রাউজার মেনু থেকে "Add to Home Screen" করে রাখলে নেট না থাকলেও অ্যাপটি ওপেন হবে।
                 </li>
             </ul>
             <button id="gotItBtn" class="btn btn-primary btn-lg" style="width:100%;">বুঝেছি</button>
@@ -840,7 +652,7 @@
         window.addEventListener("DOMContentLoaded", function () {
             "use strict";
 
-            // Theme Management (Light / Dark Mode)
+            // Theme Management
             const htmlEl = document.documentElement;
             const themeToggleBtn = document.getElementById("themeToggleBtn");
             const themeIcon = document.getElementById("themeIcon");
@@ -879,7 +691,7 @@
                 }
             });
 
-            // Service Worker & PWA Install
+            // Service Worker & PWA Install Button
             if ("serviceWorker" in navigator) {
                 navigator.serviceWorker.register("./sw.js").catch(() => {});
             }
@@ -890,6 +702,11 @@
                 e.preventDefault();
                 deferredPrompt = e;
                 installAppBtn.classList.remove("hidden");
+            });
+
+            window.addEventListener("appinstalled", () => {
+                installAppBtn.classList.add("hidden");
+                deferredPrompt = null;
             });
 
             installAppBtn.onclick = async () => {
@@ -920,7 +737,6 @@
             let fileWritableStream = null;
             let currentTransferCardId = null;
 
-            // Elements
             const statusBadge = document.getElementById("statusBadge");
             const statusText = document.getElementById("statusText");
             const myRoomIdEl = document.getElementById("myRoomId");
@@ -1391,7 +1207,6 @@
                 chatBox.scrollTop = chatBox.scrollHeight;
             }
 
-            // Events
             targetIdInput.addEventListener("input", () => {
                 targetIdInput.value = targetIdInput.value.replace(/\D/g, "").slice(0, 3);
             });
