@@ -1,8 +1,10 @@
-const CACHE_NAME = "flashdrop-p2p-v2";
+const CACHE_NAME = "flashdrop-p2p-v4";
 const ASSETS = [
   "./",
   "./index.html",
   "./manifest.json",
+  "https://img.icons8.com/fluency/192/share.png",
+  "https://img.icons8.com/fluency/512/share.png",
   "https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js",
   "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"
 ];
