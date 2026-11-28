@@ -1,0 +1,13 @@
+{
+  "ads_enabled": true,
+  "admob": {
+    "app_id": "ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY",
+    "banner_id": "ca-app-pub-XXXXXXXXXXXXXXXX/1111111111",
+    "interstitial_id": "ca-app-pub-XXXXXXXXXXXXXXXX/2222222222",
+    "app_open_id": "ca-app-pub-XXXXXXXXXXXXXXXX/3333333333"
+  },
+  "web_ad_code": {
+    "banner_script_url": "",
+    "direct_link_url": ""
+  }
+}
