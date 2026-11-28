@@ -1,4 +1,4 @@
-const CACHE_NAME = "flashdrop-p2p-v4";
+const CACHE_NAME = "flashdrop-p2p-v5";
 const ASSETS = [
   "./",
   "./index.html",
@@ -27,6 +27,10 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
+  if (event.request.url.includes("ads-config.json")) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       return cachedResponse || fetch(event.request);
