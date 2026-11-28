@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.flashdrop.p2p",
+        "sha256_cert_fingerprints": ["A4:7B:18:C2:9A:6E:80:CA:5C:3F:0B:55:F9:AE:E7:D8:22:9E:CA:C8:C9:A7:45:61:A7:ED:F2:F6:DE:42:08:D8"]
+      }
+    }]
