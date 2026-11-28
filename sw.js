@@ -1,4 +1,4 @@
-const CACHE_NAME = "flashdrop-p2p-v5";
+const CACHE_NAME = "flashdrop-p2p-v6";
 const ASSETS = [
   "./",
   "./index.html",

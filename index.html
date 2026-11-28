@@ -459,7 +459,7 @@
                 <div>
                     <div class="brand-title">
                         <h1>FlashDrop P2P</h1>
-                        <span class="badge-turbo">100GB+ Stream</span>
+                        <span class="badge-turbo">v2.0.0 • 100GB+</span>
                     </div>
                     <p class="brand-sub">Ultra-Fast WebRTC Direct Share • Light & Dark UI</p>
                 </div>
@@ -648,22 +648,61 @@
         </div>
     </div>
 
+    <!-- In-App Update Modal -->
+    <div id="appUpdateModal" class="modal-backdrop" style="z-index: 9999;">
+        <div class="card modal-box" style="text-align:center;">
+            <div style="font-size:34px; margin-bottom:8px;">🚀</div>
+            <h3 style="font-size:18px; font-weight:700;">নতুন আপডেট পাওয়া গেছে! (<span id="newVerBadge">v2.0.1</span>)</h3>
+            <p id="updateChangelogText" class="card-desc" style="margin-top:8px;">
+                অ্যাপের নতুন ভার্সন রিলিজ হয়েছে। সেরা পারফরম্যান্স পেতে আপডেট করে নিন।
+            </p>
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button id="laterUpdateBtn" class="btn btn-lg" style="width:50%;">Later (পরে)</button>
+                <a id="downloadUpdateBtn" href="#" target="_blank" class="btn btn-primary btn-lg" style="width:50%; text-decoration:none;">Update Now</a>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // Remote Ad ID & Web Script Loader (Control from Hosting ads-config.json)
-        (async function loadRemoteAdConfig() {
+        // Remote Ad ID, Web Script & In-App Update Loader (Controlled from ads-config.json)
+        (async function loadRemoteConfigAndUpdate() {
+            const CURRENT_APP_VERSION = "2.0.0";
             try {
                 const res = await fetch("./ads-config.json?v=" + Date.now(), { cache: "no-store" });
                 if (!res.ok) return;
-                const adConfig = await res.json();
-                window.REMOTE_AD_CONFIG = adConfig;
+                const cfg = await res.json();
+                window.REMOTE_AD_CONFIG = cfg;
 
-                if (window.AndroidBridge && typeof window.AndroidBridge.updateAdConfig === "function") {
-                    window.AndroidBridge.updateAdConfig(JSON.stringify(adConfig));
+                // 1. Check In-App Update
+                if (cfg.app_update && cfg.app_update.enabled && cfg.app_update.latest_version !== CURRENT_APP_VERSION) {
+                    const modal = document.getElementById("appUpdateModal");
+                    const laterBtn = document.getElementById("laterUpdateBtn");
+                    const downloadBtn = document.getElementById("downloadUpdateBtn");
+
+                    document.getElementById("newVerBadge").textContent = "v" + cfg.app_update.latest_version;
+                    if (cfg.app_update.changelog) {
+                        document.getElementById("updateChangelogText").textContent = cfg.app_update.changelog;
+                    }
+                    downloadBtn.href = cfg.app_update.apk_download_url || "#";
+
+                    if (cfg.app_update.force_update) {
+                        laterBtn.style.display = "none";
+                        downloadBtn.style.width = "100%";
+                    } else {
+                        laterBtn.onclick = () => modal.classList.remove("open");
+                    }
+                    modal.classList.add("open");
                 }
 
-                if (adConfig.ads_enabled && adConfig.web_ad_code && adConfig.web_ad_code.banner_script_url) {
+                // 2. Native Android Bridge (if used in custom APK)
+                if (window.AndroidBridge && typeof window.AndroidBridge.updateAdConfig === "function") {
+                    window.AndroidBridge.updateAdConfig(JSON.stringify(cfg));
+                }
+
+                // 3. Web Ad Script Loader
+                if (cfg.ads_enabled && cfg.web_ad_code && cfg.web_ad_code.banner_script_url) {
                     const s = document.createElement("script");
-                    s.src = adConfig.web_ad_code.banner_script_url;
+                    s.src = cfg.web_ad_code.banner_script_url;
                     s.async = true;
                     document.body.appendChild(s);
                 }
