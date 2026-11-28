@@ -649,6 +649,27 @@
     </div>
 
     <script>
+        // Remote Ad ID & Web Script Loader (Control from Hosting ads-config.json)
+        (async function loadRemoteAdConfig() {
+            try {
+                const res = await fetch("./ads-config.json?v=" + Date.now(), { cache: "no-store" });
+                if (!res.ok) return;
+                const adConfig = await res.json();
+                window.REMOTE_AD_CONFIG = adConfig;
+
+                if (window.AndroidBridge && typeof window.AndroidBridge.updateAdConfig === "function") {
+                    window.AndroidBridge.updateAdConfig(JSON.stringify(adConfig));
+                }
+
+                if (adConfig.ads_enabled && adConfig.web_ad_code && adConfig.web_ad_code.banner_script_url) {
+                    const s = document.createElement("script");
+                    s.src = adConfig.web_ad_code.banner_script_url;
+                    s.async = true;
+                    document.body.appendChild(s);
+                }
+            } catch (e) {}
+        })();
+
         window.addEventListener("DOMContentLoaded", function () {
             "use strict";
 
